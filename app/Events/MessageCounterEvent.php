@@ -10,31 +10,27 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class EventsTypingIndicator implements ShouldBroadcast
+class MessageCounterEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
- public $message,$sender_id,$reciever_id;
-    /**
-     * Create a new event instance.
-     *
-     * @return void
-     */
-    public function __construct($msg,$sender,$reciever)
-    {
-  $this->sender_id=$sender;
-  $this->reciever_id=$reciever;
-   $this->message=$msg;
 
+   public $from,$to,$count;
+
+    public function __construct($from,$to,$count)
+    {
+   $this->from=$from;
+   $this->to=$to;
+   $this->count=$count;
     }
 
 
   public function broadcastOn()
   {
-      return ['my-typing'];
+      return ['message-counter-channel'];
   }
 
   public function broadcastAs()
   {
-      return 'my-typing';
+      return 'message-counter-event';
   }
 }

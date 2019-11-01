@@ -9,14 +9,22 @@ use App\Message;
 use Pusher\Pusher;
 use App\Events\SendMessageEvent;
 use App\Events\EventsTypingIndicator;
+use App\Events\MessageCountEvent;
+use Illuminate\Support\Facades\DB;
 class UserController extends Controller
 {
 public $successStatus = 200;
 
+
     public function getUser(Request $request){
 
-  $users = User::where('id','!=',$request->get('logged_user'))->get();
-  return response()->json($users->toArray());
+        $users = DB::select("select users.id, users.firstName, users.lastName, users.email, count(is_read) as unread 
+        from users LEFT  JOIN  messages ON users.id = messages.from and is_read = 0 and messages.to = " .$request->get('logged_user') . "
+        where users.id != " . $request->get('logged_user') . " 
+        group by users.id, users.firstName, users.lastName, users.email");
+
+//    $users = User::where('id','!=',$request->get('logged_user'))->get();
+  return response()->json($users);
 
     }
     public function getUserDetail(Request $request){
@@ -89,6 +97,8 @@ if ($validator->fails()) {
    public function getMessage(Request $request){
     $sender_id=$request->get('sender_id');
     $user_id=$request->get('receiver_id');
+    Message::where(['from' => $user_id, 'to' => $sender_id])->update(['is_read' => 1]);
+
      $messages = Message::where(function ($query) use ($user_id, $sender_id) {
             $query->where('from', $user_id)->where('to', $sender_id);
         })->oRwhere(function ($query) use ($user_id, $sender_id) {
@@ -103,7 +113,7 @@ if ($validator->fails()) {
     }
     public function sendMessage(Request $request)
     {
-        $from = $request->get('sender_id');//Auth::id();
+        $from = $request->get('sender_id');
         $to = $request->get('receiver_id');
         $message =$request->get('message');
         $data = new Message();
@@ -112,27 +122,22 @@ if ($validator->fails()) {
         $data->message = $message;
         $data->is_read = 0; // message will be unread when sending message
         $data->save();
-   event(new sendMessageEvent($from,$to,$message));
 
-   // pusher
-        // $options = array(
-        //     'cluster' => 'ap2',
-        //     'useTLS' => true
-        // );
-        //
-        // $pusher = new Pusher(
-        //     env('PUSHER_APP_KEY'),
-        //     env('PUSHER_APP_SECRET'),
-        //     env('PUSHER_APP_ID'),
-        //     $options
-        // );
-        //
-        // $data = ['from' => $from, 'to' => $to,'message'=>$message]; // sending from and to user id when pressed enter
-        // $pusher->trigger('my-channel', 'my-event', $data);
-        return response()->json(['succces'=>"good"]);
+$msgCounter = DB::select("select count(is_read) as unread from messages where messages.from=".$from." and messages.to=".$to." and is_read=0");
+
+   event(new sendMessageEvent($from,$to,$message,$msgCounter));
+
+   return response()->json(['succces'=>$msgCounter]);
+        //return response()->json(['succces'=>"good"]);
     }
 
 public function message(Request $request){
-  event(new EventsTypingIndicator($request->get('typing')));
+  event(new EventsTypingIndicator($request->get('typing'),$request->get('sender_id'),$request->get('reciever_id')));
 }
+public function getMessageCounter(){
+    $msgCounter = DB::select("select * from messages where is_read=0");
+    // event(new MessageCounterEvent( $msgCounter.from,$msgCounter.to,$msgCounter.count));
+    return response()->json($msgCounter);
+  }
+  
 }

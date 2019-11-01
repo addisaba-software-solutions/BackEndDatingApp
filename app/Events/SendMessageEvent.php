@@ -14,13 +14,14 @@ class sendMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-   public $from,$to,$message;
+   public $from,$to,$message,$counter;
 
-    public function __construct($from,$to,$message)
+    public function __construct($from,$to,$message,$counter)
     {
    $this->from=$from;
    $this->to=$to;
    $this->message=$message;
+   $this->counter=$counter;
     }
 
 

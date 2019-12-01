@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateMessagesTable extends Migration
+class CreateProfileVisitedsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CreateMessagesTable extends Migration
      */
     public function up()
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('profile_visiteds', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('from');
-            $table->string('to');
-            $table->text('message');           
-            $table->text('image');
-            $table->tinyInteger('is_read');
+            $table->string('visited');
             $table->timestamps();
         });
     }
@@ -31,6 +27,6 @@ class CreateMessagesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('profile_visiteds');
     }
 }

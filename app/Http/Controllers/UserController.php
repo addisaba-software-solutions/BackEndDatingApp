@@ -20,7 +20,7 @@ public $successStatus = 200;
 
         $users = DB::select("select users.id, users.firstName, users.lastName, users.email, count(is_read) as unread 
         from users LEFT  JOIN  messages ON users.id = messages.from and is_read = 0 and messages.to = " .$request->get('logged_user') . "
-        where users.id != " . $request->get('logged_user') . " 
+        where users.email != " . $request->get('logged_user') . " 
         group by users.id, users.firstName, users.lastName, users.email");
 
 //    $users = User::where('id','!=',$request->get('logged_user'))->get();
@@ -40,10 +40,6 @@ public $successStatus = 200;
   $users = User::where('id','!=',$user_id)->get();
 
   return response()->json([$users->toArray(),$messages->toArray()]);
-
-        // select all users except logged in user
-        // $users = User::where('id', '!=', Auth::id())->get()->toJson();
-        // return response()->json($users->toArray());
     }
 
   public function login(Request $request){
